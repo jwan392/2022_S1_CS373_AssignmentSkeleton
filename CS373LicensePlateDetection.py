@@ -96,10 +96,21 @@ def main():
     axs1[1, 0].imshow(px_array_b, cmap='gray')
 
 
-    # STUDENT IMPLEMENTATION here
+    # STUDENT IMPLEMENTATION here sssssssssssssssssssssssssssss 刚写的从 coderunner上的
 
-    px_array = px_array_r
-
+    px_array = computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_width, image_height)
+    px_array = computeStandardDeviationImage(pixel_array, image_width, image_height)
+    px_array = scaleTo0And255AndQuantize(pixel_array, image_width, image_height)
+    px_array = computeThresholdGE(pixel_array, 150, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height)
+    
+    px_array = computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height)
+    px_array = computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height)
+    px_array = computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height)
+    
     # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
     center_x = image_width / 2.0
     center_y = image_height / 2.0
