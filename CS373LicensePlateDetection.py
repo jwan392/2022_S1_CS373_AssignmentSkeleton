@@ -1,6 +1,5 @@
 import math
 import sys
-import matplotlib
 from pathlib import Path
 
 
@@ -105,16 +104,15 @@ def computeThresholdGE(pixel_array, threshold_value,image_width, image_height):
 def printPixelArray(thresholded):
     for row in thresholded:
         print(*row)
-
 def computeMinAndMaxValues(pixel_array, image_width, image_height):
     min = pixel_array[0][0]
     max = pixel_array[0][0]
     for rows in pixel_array:
-        for value in rows:
-            if value < min:
-                min = value
-            if value > maxi:
-                maxi = value
+        for values in rows:
+            if values < min:
+                min = values
+            if values > max:
+                max = values
     return (min, max)
 
 def scaleTo0And255AndQuantize(pixel_array, image_width, image_height):
@@ -132,29 +130,6 @@ def scaleTo0And255AndQuantize(pixel_array, image_width, image_height):
 
         return pixel_array
 
-def find_box(pixel_array, dict, image_width, image_height):
-    new=[]
-    for i in dict.keys():
-        new.append(i)
-
-    max = new[0]
-    new_max = 0
-    for num in dict.keys():
-        if dict[num] > max:
-            max = dict[num]
-            new_max=num
-    a = image_width
-    b = 0
-    c = image_height
-    d = 0
-    for i in range(image_height):
-        for j in range(image_width):
-            if pixel_array[i][j] == new_max:
-                a = min(j, a)
-                b = max(j, b)
-                c = min(i, c)
-                d = max(i, d)
-    return a, b, c, d
 def computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height):
     list= createInitializedGreyscalePixelArray(image_width, image_height)
     for i in range(image_height):
@@ -169,6 +144,20 @@ def computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height):
             if max(new_list) >0:
                 list[i][j] = 1
     return list
+def computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height):
+        result = [[0 for i in range(image_width)] for j in range(image_height)]
+        for i in range(1, image_height - 1):
+            for j in range(1, image_width - 1):
+                all_ones = True
+                for a in range(-1, 2):
+                    for b in range(-1, 2):
+                        if pixel_array[i + a][j + b] == 0:
+                            all_ones = False
+                result[i][j] = 1 if all_ones else 0
+
+        return result
+
+
 
 
 # This is our code skeleton that performs the license plate detection.
@@ -217,7 +206,16 @@ def main():
     px_array = computeStandardDeviationImage5x5(px_array, image_width, image_height)
     px_array = scaleTo0And255AndQuantize(px_array, image_width, image_height)
     px_array = computeThresholdGE(px_array, 150, image_width, image_height)
+
     px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
+
+    px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
+    px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
+    px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
+
     ##px_array, n_dict = computeConnectedComponentLabeling(px_array, image_width, image_height)
     # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
     center_x = image_width / 2.0
@@ -227,7 +225,7 @@ def main():
     bbox_min_y = center_y - image_height / 4.0
     bbox_max_y = center_y + image_height / 4.0
 
-    bbox_min_x, bbox_max_x, bbox_min_y, bbox_max_y = find_box(px_array, dict, image_width, image_height)
+   ## bbox_min_x, bbox_max_x, bbox_min_y, bbox_max_y = find_box(px_array, dict, image_width, image_height)
 
 
 
