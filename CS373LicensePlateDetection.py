@@ -92,30 +92,29 @@ def standard(new_list):
 
 
 def computeMinAndMaxValues(pixel_array, image_width, image_height):
-    min = pixel_array[0][0]
-    max = pixel_array[0][0]
-    for rows in pixel_array:
-        for values in rows:
-            if values < min:
-                min = values
-            if values > max:
-                max = values
-    return (min, max)
+    min1 = pixel_array[0][0]
+    max1 = pixel_array[0][0]
+    for row in pixel_array:
+        for value in row:
+            if value < min1:
+                min1 = value
+            if value > max1:
+                max1 = value
+    return (min1, max1)
+
 
 def scaleTo0And255AndQuantize(pixel_array, image_width, image_height):
-        max_max = computeMinAndMaxValues(pixel_array, image_width, image_height)
-        min_min = computeMinAndMaxValues(pixel_array, image_width, image_height)
+    result = createInitializedGreyscalePixelArray(image_width, image_height)
 
-        if max_max == min_min:
-            pixel_array = [[0 for i in range(image_width)][:] for n in range(image_height)]
-            return pixel_array
+    minmax = computeMinAndMaxValues(pixel_array, image_width, image_height)
 
-        for row in range(image_height):
-            for col in range(image_width):
-                pixel_array[row][col] = round(
-                    (pixel_array[row][col] - min_min) * (255 / (max_max - min_min)))
+    if minmax[0] == minmax[1]:
+        return result
 
-        return pixel_array
+    for i in range(len(pixel_array)):
+        for j in range(len(pixel_array[0])):
+            result[i][j] = round((pixel_array[i][j] - minmax[0]) / (minmax[1] - minmax[0]) * 255)
+    return result
 def computeThresholdGE(pixel_array, thresholded,image_width, image_height):
     thresholded = list()
     for i in range(image_height):
@@ -256,7 +255,7 @@ def main():
     px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
     px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
 
-    px_array, d = computeConnectedComponentLabeling(px_array, image_width, image_height,d)
+    ##px_array, d = computeConnectedComponentLabeling(px_array, image_width, image_height,d)
     # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
     #center_x = image_width / 2.0
     #center_y = image_height / 2.0
