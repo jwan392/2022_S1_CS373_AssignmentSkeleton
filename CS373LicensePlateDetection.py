@@ -55,6 +55,119 @@ def createInitializedGreyscalePixelArray(image_width, image_height, initValue = 
     new_array = [[initValue for x in range(image_width)] for y in range(image_height)]
     return new_array
 
+# grey
+def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_width, image_height):
+    
+    greyscale_pixel_array = createInitializedGreyscalePixelArray(image_width, image_height)
+    for i in range (image_height):
+        for j in range(image_width):
+            greyscale_pixel_array[i][j] = round(0.299*pixel_array_r[i][j] + 0.587*pixel_array_g[i][j] + 0.114*pixel_array_b[i][j])
+    
+    return greyscale_pixel_array
+
+def computeStandardDeviationImage5x5(pixel_array, image_width, image_height):
+    out_pixel = [[0 for i in range(image_width)][:] for j in range(image_height)]
+    for row in range(2, image_height - 2):
+        for col in range(2, image_width - 2):
+            out_pixel[row][col] = standard([
+                pixel_array[row- 2][col- 2],
+                pixel_array[row - 2][col],
+                pixel_array[row - 2][col + 2],
+                pixel_array[row + 2][col - 2],
+                pixel_array[row + 2][col],
+                pixel_array[row + 2][col + 2],
+                pixel_array[row][col - 2],
+                pixel_array[row][col],
+                pixel_array[row][col + 2]
+            ])
+    return out_pixel
+def standard(new_list):
+    value = sum(new_list) / len(new_list)
+    var = 0
+    for i in new_list:
+        result = i - value
+        var += result ** 2
+    return (var / len(new_list)) ** 0.5
+
+def computeThresholdGE(pixel_array, threshold_value,image_width, image_height):
+    thresholded = list()
+    for i in range(image_height):
+        index = list()
+        for j in range(image_width):
+            if(pixel_array[i][j] < threshold_value):
+                index.append(0)
+            else:
+                index.append(255)
+        thresholded.append(index)
+    return thresholded
+    
+def printPixelArray(thresholded):
+    for row in thresholded:
+        print(*row)
+
+def computeMinAndMaxValues(pixel_array, image_width, image_height):
+    min = pixel_array[0][0]
+    max = pixel_array[0][0]
+    for rows in pixel_array:
+        for value in rows:
+            if value < min:
+                min = value
+            if value > maxi:
+                maxi = value
+    return (min, max)
+
+def scaleTo0And255AndQuantize(pixel_array, image_width, image_height):
+        max_max = computeMinAndMaxValues(pixel_array, image_width, image_height)
+        min_min = computeMinAndMaxValues(pixel_array, image_width, image_height)
+
+        if max_max == min_min:
+            pixel_array = [[0 for i in range(image_width)][:] for n in range(image_height)]
+            return pixel_array
+
+        for row in range(image_height):
+            for col in range(image_width):
+                pixel_array[row][col] = round(
+                    (pixel_array[row][col] - min_min) * (255 / (max_max - min_min)))
+
+        return pixel_array
+
+def find_box(pixel_array, dict, image_width, image_height):
+    new=[]
+    for i in dict.keys():
+        new.append(i)
+
+    max = new[0]
+    new_max = 0
+    for num in dict.keys():
+        if dict[num] > max:
+            max = dict[num]
+            new_max=num
+    a = image_width
+    b = 0
+    c = image_height
+    d = 0
+    for i in range(image_height):
+        for j in range(image_width):
+            if pixel_array[i][j] == new_max:
+                a = min(j, a)
+                b = max(j, b)
+                c = min(i, c)
+                d = max(i, d)
+    return a, b, c, d
+def computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height):
+    list= createInitializedGreyscalePixelArray(image_width, image_height)
+    for i in range(image_height):
+        for j in range(image_width):
+            new_list=[]
+            for x in range(i-1, i+2):
+                for y in range(j-1, j+2):
+                    if x < 0 or y < 0 or x >= image_height or y >= image_width:
+                        new_list.append(0)
+                    else:
+                        new_list.append(pixel_array[x][y])
+            if max(new_list) >0:
+                list[i][j] = 1
+    return list
 
 
 # This is our code skeleton that performs the license plate detection.
@@ -99,19 +212,12 @@ def main():
 
     # STUDENT IMPLEMENTATION here sssssssssssssssssssssssssssss 刚写的从 coderunner上的
 
-    px_array = computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_width, image_height)
-    px_array = computeStandardDeviationImage(pixel_array, image_width, image_height)
-    px_array = scaleTo0And255AndQuantize(pixel_array, image_width, image_height)
-    px_array = computeThresholdGE(pixel_array, 150, image_width, image_height)
-    px_array = computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height)
-    px_array = computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height)
-    px_array = computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height)
-    px_array = computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height)
-    
-    px_array = computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height)
-    px_array = computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height)
-    px_array = computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height)
-    (px_array,d) = computeConnectedComponentLabeling(pixel_array, image_width, image_height)
+    px_array = computeRGBToGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
+    px_array = computeStandardDeviationImage5x5(px_array, image_width, image_height)
+    px_array = scaleTo0And255AndQuantize(px_array, image_width, image_height)
+    px_array = computeThresholdGE(px_array, 150, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
+    px_array, n_dict = computeConnectedComponentLabeling(px_array, image_width, image_height)
     # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
     center_x = image_width / 2.0
     center_y = image_height / 2.0
@@ -119,12 +225,24 @@ def main():
     bbox_max_x = center_x + image_width / 4.0
     bbox_min_y = center_y - image_height / 4.0
     bbox_max_y = center_y + image_height / 4.0
-    (bbox_min_x, bbox_min_y, bbox_max_x, bbox_max_y) = find_box(px_array, image_width, image_height, d)
+
+    bbox_min_x, bbox_max_x, bbox_min_y, bbox_max_y = find_box(px_array, dict, image_width, image_height)
 
 
 
 
     # Draw a bounding box as a rectangle into the input image
+    image_array = []
+    for i in range(image_height):
+        array = []
+        for j in range(image_width):
+            new_array = []
+            new_array.append(px_array_r[i][j])
+            new_array.append(px_array_g[i][j])
+            new_array.append(px_array_b[i][j])
+            array.append(new_array)
+        image_array.append(array)
+
     axs1[1, 1].set_title('Final image of detection')
     axs1[1, 1].imshow(px_array, cmap='gray')
     rect = Rectangle((bbox_min_x, bbox_min_y), bbox_max_x - bbox_min_x, bbox_max_y - bbox_min_y, linewidth=1,
