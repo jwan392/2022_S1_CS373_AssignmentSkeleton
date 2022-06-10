@@ -1,7 +1,7 @@
 import math
 import sys
 from pathlib import Path
-from this import d
+
 
 from matplotlib import pyplot
 from matplotlib.patches import Rectangle
