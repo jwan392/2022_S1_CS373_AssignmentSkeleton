@@ -81,6 +81,7 @@ def computeStandardDeviationImage5x5(pixel_array, image_width, image_height):
                 pixel_array[row][col + 2]
             ])
     return out_pixel
+
 def standard(new_list):
     value = sum(new_list) / len(new_list)
     var = 0
@@ -89,21 +90,7 @@ def standard(new_list):
         var += result ** 2
     return (var / len(new_list)) ** 0.5
 
-def computeThresholdGE(pixel_array, threshold_value,image_width, image_height):
-    thresholded = list()
-    for i in range(image_height):
-        index = list()
-        for j in range(image_width):
-            if(pixel_array[i][j] < threshold_value):
-                index.append(0)
-            else:
-                index.append(255)
-        thresholded.append(index)
-    return thresholded
-    
-def printPixelArray(thresholded):
-    for row in thresholded:
-        print(*row)
+
 def computeMinAndMaxValues(pixel_array, image_width, image_height):
     min = pixel_array[0][0]
     max = pixel_array[0][0]
@@ -129,6 +116,21 @@ def scaleTo0And255AndQuantize(pixel_array, image_width, image_height):
                     (pixel_array[row][col] - min_min) * (255 / (max_max - min_min)))
 
         return pixel_array
+def computeThresholdGE(pixel_array, thresholded,image_width, image_height):
+    thresholded = list()
+    for i in range(image_height):
+        index = list()
+        for j in range(image_width):
+            if(pixel_array[i][j] < 150):
+                index.append(0)
+            else:
+                index.append(255)
+        thresholded.append(index)
+    return thresholded
+    
+def printPixelArray(thresholded):
+    for row in thresholded:
+        print(*row)
 
 def computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height):
     list= createInitializedGreyscalePixelArray(image_width, image_height)
@@ -156,9 +158,47 @@ def computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height):
                 result[i][j] = 1 if all_ones else 0
 
         return result
+def computeConnectedComponentLabeling(pixel_array, image_width, image_height):
+    visit = [[0 for i in range(image_width)] for i in range(image_height)]
+    label = 0
+    dic = {}
+    for i in range(image_height):
+        for x in range(image_width):
+            if pixel_array[i][x] != 0 and visit[i][x]  == 0:
+                queue = queue()
+                label += 1
+                dic[label] = 1
+                visit[i][x] = 1
+                queue.enqueue((i, x))
+                while queue.size() != 0:
+                    index = queue.dequeue()
 
+                    pixel_array[index[0]][index[1]] = label
 
+                    if index[0] != 0:
+                        if pixel_array[index[0] - 1][index[1]] != 0 and visit[index[0] - 1][index[1]] == 0 :
+                            queue.enqueue((index[0] - 1, index[1]))
+                            visit[index[0] - 1][index[1]] = 1
+                            dic[label] += 1
 
+                    if index[1] != 0:
+                        if pixel_array[index[0]][index[1] - 1] != 0 and visit[index[0]][index[1] - 1] == 0:
+                            queue.enqueue((index[0], index[1] - 1))
+                            visit[index[0]][index[1] - 1] = 1
+                            dic[label] += 1
+
+                    if index[0] != image_height-1:
+                        if pixel_array[index[0] + 1][index[1]] != 0 and visit[index[0] + 1][index[1]] == 0:
+                            queue.enqueue((index[0] + 1, index[1]))
+                            visit[index[0] + 1][index[1]] = 1
+                            dic[label] += 1
+
+                    if index[1] != image_width-1:
+                        if pixel_array[index[0]][index[1] + 1] != 0 and visit[index[0]][index[1] + 1] == 0:
+                            queue.enqueue((index[0], index[1] + 1))
+                            visit[index[0]][index[1] + 1] = 1
+                            dic[label] += 1
+    return (pixel_array, dic)
 
 # This is our code skeleton that performs the license plate detection.
 # Feel free to try it on your own images of cars, but keep in mind that with our algorithm developed in this lecture,
@@ -216,16 +256,16 @@ def main():
     px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
     px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
 
-    ##px_array, n_dict = computeConnectedComponentLabeling(px_array, image_width, image_height)
+    px_array, d = computeConnectedComponentLabeling(px_array, image_width, image_height,d)
     # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
-    center_x = image_width / 2.0
-    center_y = image_height / 2.0
-    bbox_min_x = center_x - image_width / 4.0
-    bbox_max_x = center_x + image_width / 4.0
-    bbox_min_y = center_y - image_height / 4.0
-    bbox_max_y = center_y + image_height / 4.0
+    #center_x = image_width / 2.0
+    #center_y = image_height / 2.0
+    #bbox_min_x = center_x - image_width / 4.0
+    #bbox_max_x = center_x + image_width / 4.0
+    #bbox_min_y = center_y - image_height / 4.0
+    #bbox_max_y = center_y + image_height / 4.0
 
-   ## bbox_min_x, bbox_max_x, bbox_min_y, bbox_max_y = find_box(px_array, dict, image_width, image_height)
+    ##bbox_min_x, bbox_max_x, bbox_min_y, bbox_max_y = find_box(px_array, dict, image_width, image_height)
 
 
 
