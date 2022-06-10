@@ -2,7 +2,6 @@ import math
 import sys
 from pathlib import Path
 
-
 from matplotlib import pyplot
 from matplotlib.patches import Rectangle
 
@@ -55,7 +54,6 @@ def createInitializedGreyscalePixelArray(image_width, image_height, initValue = 
     new_array = [[initValue for x in range(image_width)] for y in range(image_height)]
     return new_array
 
-# grey
 def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_width, image_height):
     
     greyscale_pixel_array = createInitializedGreyscalePixelArray(image_width, image_height)
@@ -64,7 +62,6 @@ def computeRGBToGreyscale(pixel_array_r, pixel_array_g, pixel_array_b, image_wid
             greyscale_pixel_array[i][j] = round(0.299*pixel_array_r[i][j] + 0.587*pixel_array_g[i][j] + 0.114*pixel_array_b[i][j])
     
     return greyscale_pixel_array
-
 def computeStandardDeviationImage5x5(pixel_array, image_width, image_height):
     out_pixel = [[0 for i in range(image_width)][:] for j in range(image_height)]
     for row in range(2, image_height - 2):
@@ -89,8 +86,6 @@ def standard(new_list):
         result = i - value
         var += result ** 2
     return (var / len(new_list)) ** 0.5
-
-
 def computeMinAndMaxValues(pixel_array, image_width, image_height):
     min1 = pixel_array[0][0]
     max1 = pixel_array[0][0]
@@ -101,20 +96,6 @@ def computeMinAndMaxValues(pixel_array, image_width, image_height):
             if value > max1:
                 max1 = value
     return (min1, max1)
-
-
-def scaleTo0And255AndQuantize(pixel_array, image_width, image_height):
-    result = createInitializedGreyscalePixelArray(image_width, image_height)
-
-    minmax = computeMinAndMaxValues(pixel_array, image_width, image_height)
-
-    if minmax[0] == minmax[1]:
-        return result
-
-    for i in range(len(pixel_array)):
-        for j in range(len(pixel_array[0])):
-            result[i][j] = round((pixel_array[i][j] - minmax[0]) / (minmax[1] - minmax[0]) * 255)
-    return result
 def computeThresholdGE(pixel_array, thresholded,image_width, image_height):
     thresholded = list()
     for i in range(image_height):
@@ -131,6 +112,33 @@ def printPixelArray(thresholded):
     for row in thresholded:
         print(*row)
 
+
+def scaleTo0And255AndQuantize(pixel_array, image_width, image_height):
+    result = createInitializedGreyscalePixelArray(image_width, image_height)
+
+    minmax = computeMinAndMaxValues(pixel_array, image_width, image_height)
+
+    if minmax[0] == minmax[1]:
+        return result
+
+    for i in range(len(pixel_array)):
+        for j in range(len(pixel_array[0])):
+            result[i][j] = round((pixel_array[i][j] - minmax[0]) / (minmax[1] - minmax[0]) * 255)
+    return result
+def computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height):
+    list= createInitializedGreyscalePixelArray(image_width, image_height)
+    for i in range(image_height):
+        for j in range(image_width):
+            new_list=[]
+            for x in range(i-1, i+2):
+                for y in range(j-1, j+2):
+                    if x < 0 or y < 0 or x >= image_height or y >= image_width:
+                        new_list.append(0)
+                    else:
+                        new_list.append(pixel_array[x][y])
+            if min(new_list) >0:
+                list[i][j] = 1
+    return list
 def computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height):
     list= createInitializedGreyscalePixelArray(image_width, image_height)
     for i in range(image_height):
@@ -145,60 +153,60 @@ def computeDilation8Nbh3x3FlatSE(pixel_array, image_width, image_height):
             if max(new_list) >0:
                 list[i][j] = 1
     return list
-def computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height):
-        result = [[0 for i in range(image_width)] for j in range(image_height)]
-        for i in range(1, image_height - 1):
-            for j in range(1, image_width - 1):
-                all_ones = True
-                for a in range(-1, 2):
-                    for b in range(-1, 2):
-                        if pixel_array[i + a][j + b] == 0:
-                            all_ones = False
-                result[i][j] = 1 if all_ones else 0
+class Queue:
+    def __init__(self):
+        self.items = []
 
-        return result
+    def isEmpty(self):
+        return self.items == []
+
+    def enqueue(self, item):
+        self.items.insert(0,item)
+
+    def dequeue(self):
+        return self.items.pop()
+
+    def size(self):
+        return len(self.items)
+
 def computeConnectedComponentLabeling(pixel_array, image_width, image_height):
-    visit = [[0 for i in range(image_width)] for i in range(image_height)]
+    result = [[0 for i in range(image_width)] for i in range(image_height)]
     label = 0
     dic = {}
     for i in range(image_height):
         for x in range(image_width):
-            if pixel_array[i][x] != 0 and visit[i][x]  == 0:
-                queue = queue()
+            if pixel_array[i][x] != 0 and result[i][x]  == 0:
+                queue = Queue()
                 label += 1
                 dic[label] = 1
-                visit[i][x] = 1
+                result[i][x] = 1
                 queue.enqueue((i, x))
                 while queue.size() != 0:
                     index = queue.dequeue()
-
                     pixel_array[index[0]][index[1]] = label
 
-                    if index[0] != 0:
-                        if pixel_array[index[0] - 1][index[1]] != 0 and visit[index[0] - 1][index[1]] == 0 :
-                            queue.enqueue((index[0] - 1, index[1]))
-                            visit[index[0] - 1][index[1]] = 1
-                            dic[label] += 1
-
-                    if index[1] != 0:
-                        if pixel_array[index[0]][index[1] - 1] != 0 and visit[index[0]][index[1] - 1] == 0:
-                            queue.enqueue((index[0], index[1] - 1))
-                            visit[index[0]][index[1] - 1] = 1
-                            dic[label] += 1
-
-                    if index[0] != image_height-1:
-                        if pixel_array[index[0] + 1][index[1]] != 0 and visit[index[0] + 1][index[1]] == 0:
-                            queue.enqueue((index[0] + 1, index[1]))
-                            visit[index[0] + 1][index[1]] = 1
-                            dic[label] += 1
-
                     if index[1] != image_width-1:
-                        if pixel_array[index[0]][index[1] + 1] != 0 and visit[index[0]][index[1] + 1] == 0:
+                        if pixel_array[index[0]][index[1] + 1] != 0 and result[index[0]][index[1] + 1] == 0:
                             queue.enqueue((index[0], index[1] + 1))
-                            visit[index[0]][index[1] + 1] = 1
+                            result[index[0]][index[1] + 1] = 1
                             dic[label] += 1
-    return (pixel_array, dic)
+                    if index[0] != image_height-1:
+                        if pixel_array[index[0] + 1][index[1]] != 0 and result[index[0] + 1][index[1]] == 0:
+                            queue.enqueue((index[0] + 1, index[1]))
+                            result[index[0] + 1][index[1]] = 1
+                            dic[label] += 1
+                    if index[0] != 0:
+                        if pixel_array[index[0] - 1][index[1]] != 0 and result[index[0] - 1][index[1]] == 0 :
+                            queue.enqueue((index[0] - 1, index[1]))
+                            result[index[0] - 1][index[1]] = 1
+                            dic[label] += 1
+                    if index[1] != 0:
+                        if pixel_array[index[0]][index[1] - 1] != 0 and result[index[0]][index[1] - 1] == 0:
+                            queue.enqueue((index[0], index[1] - 1))
+                            result[index[0]][index[1] - 1] = 1
+                            dic[label] += 1
 
+    return (pixel_array, dic)
 # This is our code skeleton that performs the license plate detection.
 # Feel free to try it on your own images of cars, but keep in mind that with our algorithm developed in this lecture,
 # we won't detect arbitrary or difficult to detect license plates!
@@ -239,51 +247,63 @@ def main():
     axs1[1, 0].imshow(px_array_b, cmap='gray')
 
 
-    # STUDENT IMPLEMENTATION here sssssssssssssssssssssssssssss 刚写的从 coderunner上的
-
+    # STUDENT IMPLEMENTATION here
     px_array = computeRGBToGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
     px_array = computeStandardDeviationImage5x5(px_array, image_width, image_height)
     px_array = scaleTo0And255AndQuantize(px_array, image_width, image_height)
     px_array = computeThresholdGE(px_array, 150, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
+    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
 
-    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
-    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
-    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
-    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
     px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
     px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
     px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
+    px_array, d = computeConnectedComponentLabeling(px_array, image_width, image_height)
 
-    ##px_array, d = computeConnectedComponentLabeling(px_array, image_width, image_height,d)
-    # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
-    center_x = image_width / 2.0
-    center_y = image_height / 2.0
-    bbox_min_x = center_x - image_width / 4.0
-    bbox_max_x = center_x + image_width / 4.0
-    bbox_min_y = center_y - image_height / 4.0
-    bbox_max_y = center_y + image_height / 4.0
+    for index in d.keys():
+        list_x=[]
+        list_y=[]
+        if (d[index]> 0):
+            for i in range(image_height):
+                for j in range(image_width):
+                    if px_array[i][j]==index:
+                        list_x.append(j)
+                        list_y.append(i)
+            dict_min = list_x[0] ** 2 + list_y[0] ** 2
+            dict_max = list_x[0] ** 2 + list_y[0] ** 2
+            min = 0
+            max = 0
+            for k in range(len(list_x)):
+                if dict_max < list_x[k] ** 2 + list_y[k] ** 2 and list_x[k] ** 2 + list_y[k] ** 2 <(image_width**2 + image_height**2):
+                    dict_max = list_x[k] ** 2 + list_y[k] ** 2
+                    max = k
+                if dict_min>list_x[k]**2 + list_y[k]**2 and list_x[k]**2 + list_y[k]**2 > 0:
+                    dict_min=list_x[k]**2 + list_y[k]**2
+                    min = k
 
+            box_min_x = list_x[min]
+            box_min_y = list_y[min]
 
+            box_max_x = list_x[max]
+            box_max_y = list_y[max]
 
+            box_width = box_max_x - box_min_x
+            box_height = box_max_y - box_min_y
 
-    # Draw a bounding box as a rectangle into the input image
-    image_array = []
-    for i in range(image_height):
-        array = []
-        for j in range(image_width):
-            new_array = []
-            new_array.append(px_array_r[i][j])
-            new_array.append(px_array_g[i][j])
-            new_array.append(px_array_b[i][j])
-            array.append(new_array)
-        image_array.append(array)
-
+            if box_width > 0 and box_height>0:
+                if box_width/box_height > 1.5 and box_width/box_height < 6.0:
+                    bbox_min_x = box_min_x
+                    bbox_max_x = box_max_x
+                    bbox_min_y = box_min_y
+                    bbox_max_y = box_max_y
+    px_array = computeRGBToGreyscale(px_array_r, px_array_g, px_array_b, image_width, image_height)
     axs1[1, 1].set_title('Final image of detection')
     axs1[1, 1].imshow(px_array, cmap='gray')
     rect = Rectangle((bbox_min_x, bbox_min_y), bbox_max_x - bbox_min_x, bbox_max_y - bbox_min_y, linewidth=1,
                      edgecolor='g', facecolor='none')
     axs1[1, 1].add_patch(rect)
-
 
 
     # write the output image into output_filename, using the matplotlib savefig method
