@@ -255,7 +255,7 @@ def main():
     px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
     px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
     px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
-    px_array = computeDilation8Nbh3x3FlatSE(px_array, image_width, image_height)
+
 
     px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
     px_array = computeErosion8Nbh3x3FlatSE(px_array, image_width, image_height)
