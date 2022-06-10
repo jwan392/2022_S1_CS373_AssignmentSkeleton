@@ -1,6 +1,7 @@
 import math
 import sys
 from pathlib import Path
+from this import d
 
 from matplotlib import pyplot
 from matplotlib.patches import Rectangle
@@ -110,7 +111,7 @@ def main():
     px_array = computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height)
     px_array = computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height)
     px_array = computeErosion8Nbh3x3FlatSE(pixel_array, image_width, image_height)
-    
+    (px_array,d) = computeConnectedComponentLabeling(pixel_array, image_width, image_height)
     # compute a dummy bounding box centered in the middle of the input image, and with as size of half of width and height
     center_x = image_width / 2.0
     center_y = image_height / 2.0
@@ -118,7 +119,7 @@ def main():
     bbox_max_x = center_x + image_width / 4.0
     bbox_min_y = center_y - image_height / 4.0
     bbox_max_y = center_y + image_height / 4.0
-
+    (bbox_min_x, bbox_min_y, bbox_max_x, bbox_max_y) = find_box(px_array, image_width, image_height, d)
 
 
 
